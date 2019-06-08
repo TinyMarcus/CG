@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1005</width>
+    <height>797</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Лабораторная работа №7 Ильясов ИУ7-43Б</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QPushButton" name="rect">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>634</y>
+      <width>211</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Отсекатель</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="table">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>8</y>
+      <width>211</width>
+      <height>561</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string>НАЧАЛО</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>КОНЕЦ</string>
+     </property>
+    </column>
+   </widget>
+   <widget class="QPushButton" name="paint">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>714</y>
+      <width>211</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Отсечь</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="bars">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>674</y>
+      <width>211</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Отрезки</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="view">
+    <property name="geometry">
+     <rect>
+      <x>4</x>
+      <y>8</y>
+      <width>781</width>
+      <height>781</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="clear_bt">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>754</y>
+      <width>211</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Очистить</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="on_bars">
+    <property name="geometry">
+     <rect>
+      <x>1010</x>
+      <y>760</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Добавить отрезки на грани</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="color_algo_bt">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>589</y>
+      <width>211</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="seed_color_label">
+    <property name="geometry">
+     <rect>
+      <x>810</x>
+      <y>569</y>
+      <width>171</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Цвет отсеченной части</string>
+    </property>
+   </widget>
+   <widget class="Line" name="line_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>617</y>
+      <width>211</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
