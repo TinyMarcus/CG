@@ -17,9 +17,9 @@ class Window(QtWidgets.QMainWindow):
         self.polygon_color = QColor(Qt.blue)
         self.cut_polygon_color = QColor(Qt.red)
         
-        self.cutter = list()
-        self.polygons = list()
-        self.cur_polygon = list()
+        self.cutter_figure = list()
+        self.figures = list()
+        self.current_figure = list()
         
         self.full_polygon = False
         self.isConvex = False
@@ -61,7 +61,7 @@ def add_polygon_sb(window):
 
 def add_polygon(point):
     global window
-    window.cur_polygon.append(point)
+    window.current_figure.append(point)
     cut_all(window)
 
 def add_cutter_event(point):
@@ -80,25 +80,25 @@ def add_cutter(point):
         QMessageBox.warning(window, "Ошибка", "Отсекатель уже введен")
         return
 
-    window.cutter.append(point)
-    size = len(window.cutter)
+    window.cutter_figure.append(point)
+    size = len(window.cutter_figure)
 
     if size > 1:
-        window.scene.addLine(QLineF(window.cutter[size - 2], window.cutter[size - 1]), QPen(window.cutter_color))
+        window.scene.addLine(QLineF(window.cutter_figure[size - 2], window.cutter_figure[size - 1]), QPen(window.cutter_color))
 
 def cut_all(window):
     window.scene.clear()
     
-    for polygon in window.polygons:
-        for i in range(len(polygon) - 1):
-            window.scene.addLine(QLineF(polygon[i], polygon[i + 1]), QPen(window.polygon_color))
+    for figure in window.figures:
+        for i in range(len(figure) - 1):
+            window.scene.addLine(QLineF(figure[i], figure[i + 1]), QPen(window.polygon_color))
 
-    for i in range(len(window.cutter) - 1):
-        window.scene.addLine(QLineF(window.cutter[i], window.cutter[i + 1]), QPen(window.cutter_color))
+    for i in range(len(window.cutter_figure) - 1):
+        window.scene.addLine(QLineF(window.cutter_figure[i], window.cutter_figure[i + 1]), QPen(window.cutter_color))
 
-    if len(window.cur_polygon) > 1:
-        for i in range(len(window.cur_polygon) - 1):
-            window.scene.addLine(QLineF(window.cur_polygon[i], window.cur_polygon[i + 1]), QPen(window.polygon_color))
+    if len(window.current_figure) > 1:
+        for i in range(len(window.current_figure) - 1):
+            window.scene.addLine(QLineF(window.current_figure[i], window.current_figure[i + 1]), QPen(window.polygon_color))
 
     if window.full_polygon:
         if not window.isConvex:
@@ -108,11 +108,11 @@ def cut_all(window):
 def close_cutter():
     global window
     
-    size = len(window.cutter)
+    size = len(window.cutter_figure)
     if size > 2:
-        add_cutter(window.cutter[0])
+        add_cutter(window.cutter_figure[0])
         window.full_polygon = True
-        isConvex, _sign = is_convex(window.cutter)
+        isConvex, _sign = is_convex(window.cutter_figure)
         
         if isConvex:
             window.isConvex = True
@@ -125,26 +125,26 @@ def close_cutter():
 def close_polygon():
     global window
     
-    size = len(window.cur_polygon)
+    size = len(window.current_figure)
     if size > 2:
-        add_polygon(window.cur_polygon[0])
-        window.polygons.append(window.cur_polygon)
-        window.cur_polygon = list()
+        add_polygon(window.current_figure[0])
+        window.figures.append(window.current_figure)
+        window.current_figure = list()
 
 def del_cutter(window):
-    if len(window.cutter) == 0:
+    if len(window.cutter_figure) == 0:
         QMessageBox.warning(window, "Предупреждение", "Нет введенного отсекателя")
         return
     
-    window.cutter = list()
+    window.cutter_figure = list()
     window.full_polygon = False
     cut_all(window)
 
 def del_last_polygon(window):
-    if len(window.cur_polygon) != 0:
-        window.cur_polygon = list()
-    elif len(window.polygons) != 0:
-        window.polygons.pop()
+    if len(window.current_figure) != 0:
+        window.current_figure = list()
+    elif len(window.figures) != 0:
+        window.figures.pop()
     else:
         QMessageBox.warning(window, "Предупреждение", "Нет введенных многоугольников")
         return
@@ -163,89 +163,56 @@ def get_cut_polygon_color(window):
 
 def clear(window):
     window.scene.clear()
-    window.polygons = list()
-    window.cur_polygon = list()
-    window.cutter = list()
+    window.figures = list()
+    window.current_figure = list()
+    window.cutter_figure = list()
     window.full_polygon = False
     window.isConvex = False
     window.direction = -1
 
 def cut(window):
-    for polygon in window.polygons:
-        new_polygon = sazerland_hod(window, polygon, window.cutter)
+    for figure in window.figures:
+        new_polygon = algo(window, figure, window.cutter_figure)
         for i in range(len(new_polygon) - 1):
-            window.scene.addLine(QLineF(new_polygon[i], new_polygon[i + 1]), QPen(window.cut_polygon_color))
-
+            window.scene.addLine(QLineF(new_polygon[i], new_polygon[i + 1]), QPen(window.cut_polygon_color, 2))
 
 def sign(x):
     if x == 0:
         return 0
-    
     return x / fabs(x)
 
-def is_convex(polygon):
-    size = len(polygon)
-    array_vector = list()
-    _sign = 0
+
+def is_convex(figure):
+    size = len(figure)
+    vector2d = list()
+    check_sign = 0
     
     if size < 3:
-        return False, _sign
-
+        return False, check_sign
+    
     for i in range(1, size):
         if i < size - 1:
-            ab = QPointF(polygon[i].x() - polygon[i - 1].x(), polygon[i].y() - polygon[i - 1].y())
-            bc = QPointF(polygon[i + 1].x() - polygon[i].x(), polygon[i + 1].y() - polygon[i].y())
+            ab = QPointF(figure[i].x() - figure[i - 1].x(), figure[i].y() - figure[i - 1].y())
+            bc = QPointF(figure[i + 1].x() - figure[i].x(), figure[i + 1].y() - figure[i].y())
         else:
-            ab = QPointF(polygon[i].x() - polygon[i - 1].x(), polygon[i].y() - polygon[i - 1].y())
-            bc = QPointF(polygon[1].x() - polygon[0].x(), polygon[1].y() - polygon[0].y())
+            ab = QPointF(figure[i].x() - figure[i - 1].x(), figure[i].y() - figure[i - 1].y())
+            bc = QPointF(figure[1].x() - figure[0].x(), figure[1].y() - figure[0].y())
         
-        array_vector.append(ab.x() * bc.y() - ab.y() * bc.x())
-
+        vector2d.append(ab.x() * bc.y() - ab.y() * bc.x())
+    
     exist_sign = False
-    for i in range(len(array_vector)):
-        if array_vector[i] == 0:
+    for i in range(len(vector2d)):
+        if vector2d[i] == 0:
             continue
         
         if exist_sign:
-            if sign(array_vector[i]) != _sign:
-                return False, _sign
+            if sign(vector2d[i]) != check_sign:
+                return False, check_sign
         else:
-            _sign = sign(array_vector[i])
+            check_sign = sign(vector2d[i])
             exist_sign = True
 
-    return True, _sign
-
-def is_convex(polygon):
-    size = len(polygon)
-    array_vector = list()
-    _sign = 0
-    
-    if size < 3:
-        return False, _sign
-
-    for i in range(1, size):
-        if i < size - 1:
-            ab = QPointF(polygon[i].x() - polygon[i - 1].x(), polygon[i].y() - polygon[i - 1].y())
-            bc = QPointF(polygon[i + 1].x() - polygon[i].x(), polygon[i + 1].y() - polygon[i].y())
-        else:
-            ab = QPointF(polygon[i].x() - polygon[i - 1].x(), polygon[i].y() - polygon[i - 1].y())
-            bc = QPointF(polygon[1].x() - polygon[0].x(), polygon[1].y() - polygon[0].y())
-        
-        array_vector.append(ab.x() * bc.y() - ab.y() * bc.x())
-
-    exist_sign = False
-    for i in range(len(array_vector)):
-        if array_vector[i] == 0:
-            continue
-        
-        if exist_sign:
-            if sign(array_vector[i]) != _sign:
-                return False, _sign
-        else:
-            _sign = sign(array_vector[i])
-            exist_sign = True
-
-    return True, _sign
+    return True, check_sign
 
 def visible(p0, p1, p2):
     Pab1 = (p0.x() - p1.x()) * (p2.y() - p1.y())
@@ -279,10 +246,10 @@ def intersection(p1, p2, w1, w2):
     return QPointF(p1.x() + (p2.x() - p1.x()) * param[0][0],
                    p1.y() + (p2.y() - p1.y()) * param[0][0])
 
-def sazerland_hod(window, polygon_0, cutter):
-    polygon = polygon_0.copy()
-    Np = len(polygon)
-    Nw = len(cutter)
+def algo(window, figure_tmp, cutter_figure):
+    figure = figure_tmp.copy()
+    Np = len(figure)
+    Nw = len(cutter_figure)
     
     S = QPointF()
     F = QPointF()
@@ -292,30 +259,32 @@ def sazerland_hod(window, polygon_0, cutter):
         
         for j in range(Np):
             if j != 0:
-                if fact_sech(S, polygon[j], cutter[i], cutter[i + 1]):
-                    I = intersection(S, polygon[j], cutter[i], cutter[i + 1])
+                if fact_sech(S, figure[j], cutter_figure[i], cutter_figure[i + 1]):
+                    I = intersection(S, figure[j], cutter_figure[i], cutter_figure[i + 1])
                     Q.append(I)
                     Nq += 1
             else:
-                F = polygon[j]
+                F = figure[j]
         
-            S = polygon[j]
-            is_visible = visible(S, cutter[i], cutter[i + 1])
+            S = figure[j]
+            is_visible = visible(S, cutter_figure[i], cutter_figure[i + 1])
             
             if (is_visible >= 0 and window.direction == -1) or (is_visible <= 0 and window.direction == 1):
                 Q.append(S)
                 Nq += 1
         if Nq != 0:
-            if fact_sech(S, F, cutter[i], cutter[i + 1]):
-                I = intersection(S, F, cutter[i], cutter[i + 1])
+            if fact_sech(S, F, cutter_figure[i], cutter_figure[i + 1]):
+                I = intersection(S, F, cutter_figure[i], cutter_figure[i + 1])
                 Q.append(I)
                 Nq += 1
         
         Np = Nq
-        polygon = Q.copy()
+        figure = Q.copy()
     
-    polygon.append(polygon[0])
-    return polygon
+    if len(figure) > 0:
+        figure.append(figure[0])
+    
+    return figure
 
 
 def main():

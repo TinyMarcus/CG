@@ -16,9 +16,9 @@ class Window(QtWidgets.QMainWindow):
         self.line_color = QColor(Qt.blue)
         self.cut_line_color = QColor(Qt.red)
         
-        self.polygon = list()
+        self.figure = list()
         self.lines = list()
-        self.cur_line = list()
+        self.current_line = list()
         
         self.full_polygon = False
         self.isConvex = False
@@ -52,22 +52,21 @@ class Scene(QtWidgets.QGraphicsScene):
 
 def add_line_event(p):
     global window
-    window.cur_line.append(p)
-    if len(window.cur_line) == 2:
-        add_line(QLineF(window.cur_line[0], window.cur_line[1]))
-        window.cur_line = list()
+    window.current_line.append(p)
+    if len(window.current_line) == 2:
+        add_line(QLineF(window.current_line[0], window.current_line[1]))
+        window.current_line = list()
 
 def add_paral_line(win):
     global window
-    
     num = int(window.paral_num.text())
-    print(window.polygon[num], window.polygon[num-1])
-    koef = (-(window.polygon[num].y() - window.polygon[num-1].y())) / (window.polygon[num].x() - window.polygon[num-1].x())
+    print(window.figure[num], window.figure[num-1])
+    koef = (-(window.figure[num].y() - window.figure[num-1].y())) / (window.figure[num].x() - window.figure[num-1].x())
     print(koef)
 
 
 def add_paral(win):
-    if len(win.polygon) == 0:
+    if len(win.figure) == 0:
         QMessageBox.warning(win, "Внимание!", "Не введен отсекатель!")
         return
     
@@ -79,26 +78,26 @@ def add_paral(win):
 
     num = int(num)
 
-    delta_x = win.polygon[num].x() - win.polygon[num-1].x()
-    delta_y = -(win.polygon[num].y() - win.polygon[num-1].y())
+    delta_x = win.figure[num].x() - win.figure[num-1].x()
+    delta_y = -(win.figure[num].y() - win.figure[num-1].y())
 
     delta_one = delta_x * 0.25
     delta_two = delta_y * 0.25
 
     koef = (delta_y / delta_x)
 
-    x1 = (win.polygon[num-1].x() - 30 * koef) + delta_one
-    y1 = (win.polygon[num-1].y() - 30) - delta_two
-    x2 = (win.polygon[num].x() - 30 * koef) - delta_one
-    y2 = (win.polygon[num].y() - 30) + delta_two
+    x1 = (win.figure[num-1].x() - 30 * koef) + delta_one
+    y1 = (win.figure[num-1].y() - 30) - delta_two
+    x2 = (win.figure[num].x() - 30 * koef) - delta_one
+    y2 = (win.figure[num].y() - 30) + delta_two
 
     line = QLineF(x1, y1, x2, y2)
     add_line(line)
 
-    x1 = (win.polygon[num-1].x() + 30 * koef) + delta_one
-    y1 = (win.polygon[num-1].y() + 30) - delta_two
-    x2 = (win.polygon[num].x() + 30 * koef) - delta_one
-    y2 = (win.polygon[num].y() + 30) + delta_two
+    x1 = (win.figure[num-1].x() + 30 * koef) + delta_one
+    y1 = (win.figure[num-1].y() + 30) - delta_two
+    x2 = (win.figure[num].x() + 30 * koef) - delta_one
+    y2 = (win.figure[num].y() + 30) + delta_two
 
     line = QLineF(x1, y1, x2, y2)
     add_line(line)
@@ -135,11 +134,11 @@ def add_cut(p):
         QMessageBox.warning(window, "Ошибка", "Отсекатель уже введен!")
         return
 
-    window.polygon.append(p)
-    size = len(window.polygon)
+    window.figure.append(p)
+    size = len(window.figure)
 
     if size > 1:
-        window.scene.addLine(QLineF(window.polygon[size - 2], window.polygon[size - 1]), QPen(window.cutter_color))
+        window.scene.addLine(QLineF(window.figure[size - 2], window.figure[size - 1]), QPen(window.cutter_color))
 
 def cut(window):
     window.scene.clear()
@@ -147,8 +146,8 @@ def cut(window):
     for j in range(len(window.lines)):
         window.scene.addLine(window.lines[j], QPen(window.line_color))
     
-    for i in range(len(window.polygon) - 1):
-        window.scene.addLine(QLineF(window.polygon[i], window.polygon[i + 1]), QPen(window.cutter_color))
+    for i in range(len(window.figure) - 1):
+        window.scene.addLine(QLineF(window.figure[i], window.figure[i + 1]), QPen(window.cutter_color))
 
     if window.full_polygon:
         if not window.isConvex:
@@ -158,27 +157,27 @@ def cut(window):
      
 def cut_line(window):
     for line in window.lines:
-        cyrus_beck_algo(window.polygon, line, window.direction, window)
+        cyrus_beck_algo(window.figure, line, window.direction, window)
 
      
 def close_cutter():
     global window
     
-    size = len(window.polygon)
+    size = len(window.figure)
     if size > 2:
-        add_cut(window.polygon[0])
+        add_cut(window.figure[0])
         window.full_polygon = True
-        isConvex, _sign = is_convex(window.polygon)
+        isConvex, check_sign = is_convex(window.figure)
         
         if isConvex:
             window.isConvex = True
-            window.direction = _sign
+            window.direction = check_sign
         else:
             window.isConvex = False
             QMessageBox().warning(window, "Ошибка", "Многоугольник невыпуклый")
 
 def del_cutter(window):
-    window.polygon = list()
+    window.figure = list()
     window.full_polygon = False
     window.scene.clear()
     draw_all_lines(window)
@@ -200,63 +199,61 @@ def get_cut_line_color(window):
 def clear(window):
     window.scene.clear()
     window.lines = list()
-    window.cur_line = list()
-    window.polygon = list()
+    window.current_line = list()
+    window.figure = list()
     window.full_polygon = False
     window.isConvex = False
-    window.direction = - 1
+    window.direction = -1
 
 def sign(x):
     if x == 0:
         return 0
-    
     return x / fabs(x)
 
-def is_convex(polygon):
-    size = len(polygon)
-    array_vector = list()
-    _sign = 0
+def is_convex(figure):
+    size = len(figure)
+    vector2d = list()
+    check_sign = 0
     
     if size < 3:
-        return False, _sign
+        return False, check_sign
 
     for i in range(1, size):
         if i < size - 1:
-            ab = QPointF(polygon[i].x() - polygon[i - 1].x(), polygon[i].y() - polygon[i - 1].y())
-            bc = QPointF(polygon[i + 1].x() - polygon[i].x(), polygon[i + 1].y() - polygon[i].y())
+            ab = QPointF(figure[i].x() - figure[i - 1].x(), figure[i].y() - figure[i - 1].y())
+            bc = QPointF(figure[i + 1].x() - figure[i].x(), figure[i + 1].y() - figure[i].y())
         else:
-            ab = QPointF(polygon[i].x() - polygon[i - 1].x(), polygon[i].y() - polygon[i - 1].y())
-            bc = QPointF(polygon[1].x() - polygon[0].x(), polygon[1].y() - polygon[0].y())
+            ab = QPointF(figure[i].x() - figure[i - 1].x(), figure[i].y() - figure[i - 1].y())
+            bc = QPointF(figure[1].x() - figure[0].x(), figure[1].y() - figure[0].y())
         
-        array_vector.append(ab.x() * bc.y() - ab.y() * bc.x())
+        vector2d.append(ab.x() * bc.y() - ab.y() * bc.x())
 
     exist_sign = False
-    for i in range(len(array_vector)):
-        if array_vector[i] == 0:
+    for i in range(len(vector2d)):
+        if vector2d[i] == 0:
             continue
         
         if exist_sign:
-            if sign(array_vector[i]) != _sign:
-                return False, _sign
+            if sign(vector2d[i]) != check_sign:
+                return False, check_sign
         else:
-            _sign = sign(array_vector[i])
+            check_sign = sign(vector2d[i])
             exist_sign = True
 
-    return True, _sign
+    return True, check_sign
 
 def scalar(p_1, p_2):
     return p_1.x() * p_2.x() + p_1.y() * p_2.y()
 
-def cyrus_beck_algo(polygon, line, n, window):
+def cyrus_beck_algo(figure, line, n, window):
     t_beg = 0
     t_end = 1
     
     D = QPointF(line.p2().x() - line.p1().x(), line.p2().y() - line.p1().y())
     
-    for i in range(len(polygon) - 1):
-        N = QPointF(-n * (polygon[i + 1].y() - polygon[i].y()), n * (polygon[i + 1].x() - polygon[i].x()))
-        W = QPointF(line.p1().x() - polygon[i].x(), line.p1().y() - polygon[i].y())
-        
+    for i in range(len(figure) - 1):
+        N = QPointF(-n * (figure[i + 1].y() - figure[i].y()), n * (figure[i + 1].x() - figure[i].x()))
+        W = QPointF(line.p1().x() - figure[i].x(), line.p1().y() - figure[i].y())
         
         Dscalar = scalar(D, N)
         Wscalar = scalar(W, N)
@@ -266,19 +263,19 @@ def cyrus_beck_algo(polygon, line, n, window):
                 continue
             elif Wscalar < 0:
                 return
-        else:
-            t = - Wscalar / Dscalar
-            
-            if Dscalar > 0:
-                if t > 1:
-                    return
-                else:
-                    t_beg = max(t_beg, t)
-            elif Dscalar < 0:
-                if t < 0:
-                    return
-                else:
-                    t_end = min(t_end, t)
+        
+        t = - Wscalar / Dscalar
+        
+        if Dscalar > 0:
+            if t > 1:
+                return
+            else:
+                t_beg = max(t_beg, t)
+        elif Dscalar < 0:
+            if t < 0:
+                return
+            else:
+                t_end = min(t_end, t)
 
     if t_beg <= t_end:
         window.scene.addLine(line.p1().x() + (line.p2().x() - line.p1().x()) * t_end,
