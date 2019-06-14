@@ -41,14 +41,16 @@ class Window(QtWidgets.QMainWindow):
 
 class Scene(QtWidgets.QGraphicsScene):
     def mousePressEvent(self, event):
-        if event.buttons() == Qt.LeftButton and event.modifiers() == Qt.ControlModifier:
+        if event.buttons() == Qt.LeftButton and event.modifiers() == Qt.ShiftModifier:
             add_cutter_event(event.scenePos())
-        elif  event.buttons() == Qt.RightButton and event.modifiers() == Qt.ControlModifier:
+        elif  event.buttons() == Qt.RightButton and event.modifiers() == Qt.ShiftModifier:
             close_cutter()
         elif event.buttons() == Qt.LeftButton:
             add_polygon_event(event.scenePos())
         elif event.buttons() == Qt.RightButton:
             close_polygon()
+        
+        
 
 def add_polygon_event(point):
     add_polygon(point)
@@ -112,11 +114,11 @@ def close_cutter():
     if size > 2:
         add_cutter(window.cutter_figure[0])
         window.full_polygon = True
-        isConvex, _sign = is_convex(window.cutter_figure)
+        isConvex, check_sign = is_convex(window.cutter_figure)
         
         if isConvex:
             window.isConvex = True
-            window.direction = _sign
+            window.direction = check_sign
             cut_all(window)
         else:
             window.isConvex = False
@@ -171,6 +173,10 @@ def clear(window):
     window.direction = -1
 
 def cut(window):
+    if len(window.cutter_figure) == 0:
+        QMessageBox().warning(window, "Ошибка", "Отсекатель не введен")
+        return
+
     for figure in window.figures:
         new_polygon = algo(window, figure, window.cutter_figure)
         for i in range(len(new_polygon) - 1):
@@ -180,7 +186,6 @@ def sign(x):
     if x == 0:
         return 0
     return x / fabs(x)
-
 
 def is_convex(figure):
     size = len(figure)
@@ -215,10 +220,11 @@ def is_convex(figure):
     return True, check_sign
 
 def visible(p0, p1, p2):
-    Pab1 = (p0.x() - p1.x()) * (p2.y() - p1.y())
-    Pab2 = (p0.y() - p1.y()) * (p2.x() - p1.x())
-    
-    return sign(Pab1 - Pab2)
+    tmp1 = (p0.x() - p1.x()) * (p2.y() - p1.y())
+    tmp2 = (p0.y() - p1.y()) * (p2.x() - p1.x())
+    tmp3 = tmp1 - tmp2
+
+    return sign(tmp3)
 
 def fact_sech(p0, pk, w1, w2):
     vis_1 = visible(p0, w1, w2)
@@ -230,21 +236,12 @@ def fact_sech(p0, pk, w1, w2):
     return False
 
 def intersection(p1, p2, w1, w2):
-    k = np.arange(4).reshape((2, 2))
-    k[0][0] = p2.x() - p1.x()
-    k[0][1] = w1.x() - w2.x()
-    k[1][0] = p2.y() - p1.y()
-    k[1][1] = w1.y() - w2.y()
-    
-    p = np.arange(2).reshape((2, 1))
-    p[0][0] = w1.x() - p1.x()
-    p[1][0] = w1.y() - p1.y()
-    
-    k = np.linalg.inv(k)
-    param = k.dot(p)
-    
-    return QPointF(p1.x() + (p2.x() - p1.x()) * param[0][0],
-                   p1.y() + (p2.y() - p1.y()) * param[0][0])
+    d_1 = (p2.x() - p1.x()) * (w1.y() - w2.y()) - (w1.x() - w2.x()) * (p2.y() - p1.y())
+    d_2 = (w1.x() - p1.x()) * (w1.y() - w2.y()) - (w1.x() - w2.x()) * (w1.y() - p1.y())
+    t = d_2 / d_1
+
+    return QPointF(p1.x() + (p2.x() - p1.x()) * t,
+                   p1.y() + (p2.y() - p1.y()) * t)
 
 def algo(window, figure_tmp, cutter_figure):
     figure = figure_tmp.copy()
@@ -285,7 +282,6 @@ def algo(window, figure_tmp, cutter_figure):
         figure.append(figure[0])
     
     return figure
-
 
 def main():
     global window

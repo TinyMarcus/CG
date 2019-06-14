@@ -43,7 +43,7 @@ class Window(QtWidgets.QMainWindow):
 
 class Scene(QtWidgets.QGraphicsScene):
     def mousePressEvent(self, event):
-        if event.buttons() == Qt.LeftButton and event.modifiers() == Qt.ControlModifier:
+        if event.buttons() == Qt.LeftButton and event.modifiers() == Qt.ShiftModifier:
             add_cut_event(event.scenePos())
         elif event.buttons() == Qt.LeftButton:
             add_line_event(event.scenePos())
@@ -167,7 +167,7 @@ def close_cutter():
     if size > 2:
         add_cut(window.figure[0])
         window.full_polygon = True
-        isConvex, check_sign = is_convex(window.figure)
+        isConvex, check_sign = convex_check(window.figure)
         
         if isConvex:
             window.isConvex = True
@@ -210,7 +210,7 @@ def sign(x):
         return 0
     return x / fabs(x)
 
-def is_convex(figure):
+def convex_check(figure):
     size = len(figure)
     vector2d = list()
     check_sign = 0
@@ -242,46 +242,47 @@ def is_convex(figure):
 
     return True, check_sign
 
-def scalar(p_1, p_2):
-    return p_1.x() * p_2.x() + p_1.y() * p_2.y()
+def scal_mult(p1, p2):
+    return p1.x() * p2.x() + p1.y() * p2.y()
 
 def cyrus_beck_algo(figure, line, n, window):
     t_beg = 0
     t_end = 1
-    
-    D = QPointF(line.p2().x() - line.p1().x(), line.p2().y() - line.p1().y())
+    point_beg = line.p1()
+    Directriss = QPointF(line.p2().x() - point_beg.x(), line.p2().y() - point_beg.y())
     
     for i in range(len(figure) - 1):
         N = QPointF(-n * (figure[i + 1].y() - figure[i].y()), n * (figure[i + 1].x() - figure[i].x()))
-        W = QPointF(line.p1().x() - figure[i].x(), line.p1().y() - figure[i].y())
+        W = QPointF(point_beg.x() - figure[i].x(), point_beg.y() - figure[i].y())
         
-        Dscalar = scalar(D, N)
-        Wscalar = scalar(W, N)
+        DS = scal_mult(Directriss, N)
+        WS = scal_mult(W, N)
         
-        if Dscalar == 0:
-            if Wscalar >= 0:
+        if DS == 0:
+            if WS >= 0:
                 continue
-            elif Wscalar < 0:
+            elif WS < 0:
                 return
         
-        t = - Wscalar / Dscalar
+        t = - WS / DS
+        print(t, DS, WS)
         
-        if Dscalar > 0:
+        if DS > 0:
             if t > 1:
                 return
             else:
                 t_beg = max(t_beg, t)
-        elif Dscalar < 0:
+        elif DS < 0:
             if t < 0:
                 return
             else:
                 t_end = min(t_end, t)
 
     if t_beg <= t_end:
-        window.scene.addLine(line.p1().x() + (line.p2().x() - line.p1().x()) * t_end,
-                             line.p1().y() + (line.p2().y() - line.p1().y()) * t_end,
-                             line.p1().x() + (line.p2().x() - line.p1().x()) * t_beg,
-                             line.p1().y() + (line.p2().y() - line.p1().y()) * t_beg,
+        window.scene.addLine(point_beg.x() + (line.p2().x() - point_beg.x()) * t_end,
+                             point_beg.y() + (line.p2().y() - point_beg.y()) * t_end,
+                             point_beg.x() + (line.p2().x() - point_beg.x()) * t_beg,
+                             point_beg.y() + (line.p2().y() - point_beg.y()) * t_beg,
                              QPen(window.cut_line_color))
 
 def main():
